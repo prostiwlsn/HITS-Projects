@@ -1,0 +1,126 @@
+﻿@using Common.Models
+@using Common.Messages
+@using MVCAdmin.Interfaces
+@using System.Security.Claims
+@model EditApplicationModel
+
+@inject IPersonellRequestService personellRequestService
+@inject IApplicationRequestService applicationRequestService
+@{
+    var programsRequest = await applicationRequestService.GetPrograms(new GetProgramsMessage { UserId = Model.AppointManagerMessage.UserId });
+    var faculties = programsRequest.Load.Select(program => program.FacultyId).ToList();
+
+    var managersRequest = await personellRequestService.GetPersonell(new GetPersonellRequest());
+    var managers = managersRequest.Load.Where(m => m.Role == Roles.Manager && m.FacultyId != null && faculties.Contains(m.FacultyId??Guid.Empty)).ToList();
+    List<SelectListItem> managerSelectList = managers.Select(f => new SelectListItem
+            {
+                Value = f.Id.ToString(),
+                Text = f.Name + " " + f.Surname + " " + f.SecondName
+            }).ToList();
+}
+<div class="d-flex flex-column">
+@using (Html.BeginForm("Edit", "Application", FormMethod.Post, new { id = "applicationForm" }))
+{
+    <div class="form-group">
+        @Html.HiddenFor(m => m.EditApplicationStatusMessage.UserId)
+        @Html.HiddenFor(m => m.ProfileEditMessage.UserId)
+        @Html.HiddenFor(m => m.AppointManagerMessage.UserId)
+        @Html.LabelFor(m => m.ProfileEditMessage.ProfileEditModel.Name)
+        @Html.TextBoxFor(m => m.ProfileEditMessage.ProfileEditModel.Name, new { @class = "form-control" })
+        @Html.ValidationMessageFor(m => m.ProfileEditMessage.ProfileEditModel.Name, "", new { @class = "text-danger" })
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(m => m.ProfileEditMessage.ProfileEditModel.Surname)
+        @Html.TextBoxFor(m => m.ProfileEditMessage.ProfileEditModel.Surname, new { @class = "form-control" })
+        @Html.ValidationMessageFor(m => m.ProfileEditMessage.ProfileEditModel.Surname, "", new { @class = "text-danger" })
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(m => m.ProfileEditMessage.ProfileEditModel.SecondName)
+        @Html.TextBoxFor(m => m.ProfileEditMessage.ProfileEditModel.SecondName, new { @class = "form-control" })
+        @Html.ValidationMessageFor(m => m.ProfileEditMessage.ProfileEditModel.SecondName, "", new { @class = "text-danger" })
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(m => m.ProfileEditMessage.ProfileEditModel.PhoneNumber)
+        @Html.TextBoxFor(m => m.ProfileEditMessage.ProfileEditModel.PhoneNumber, new { @class = "form-control" })
+        @Html.ValidationMessageFor(m => m.ProfileEditMessage.ProfileEditModel.PhoneNumber, "", new { @class = "text-danger" })
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(m => m.ProfileEditMessage.ProfileEditModel.Gender)
+        @Html.DropDownListFor(m => m.ProfileEditMessage.ProfileEditModel.Gender, new SelectList(Enum.GetValues(typeof(Gender))), "Select Gender", new { @class = "form-control" })
+        @Html.ValidationMessageFor(m => m.ProfileEditMessage.ProfileEditModel.Gender, "", new { @class = "text-danger" })
+    </div>
+
+
+    <div class="form-group">
+        @Html.LabelFor(m => m.ProfileEditMessage.ProfileEditModel.Citizenship)
+        @Html.TextBoxFor(m => m.ProfileEditMessage.ProfileEditModel.Citizenship, new { @class = "form-control" })
+        @Html.ValidationMessageFor(m => m.ProfileEditMessage.ProfileEditModel.Citizenship, "", new { @class = "text-danger" })
+    </div>
+
+
+    <div class="form-group">
+        @Html.LabelFor(m => m.EditApplicationStatusMessage.Status)
+        @Html.DropDownListFor(m => m.EditApplicationStatusMessage.Status, new SelectList(Enum.GetValues(typeof(ApplicationStatus))), "Select status", new { @class = "form-control" })
+        @Html.ValidationMessageFor(m => m.EditApplicationStatusMessage.Status, "", new { @class = "text-danger" })
+    </div>
+    @if (User.Claims.First(claim => claim.Type == ClaimTypes.Role).Value != "Manager")
+    {
+        <div class="form-group">
+            @Html.LabelFor(m => m.AppointManagerMessage.ManagerId, "Manager")
+            @Html.DropDownListFor(m => m.AppointManagerMessage.ManagerId, managerSelectList, "Select a manager", new { @class = "form-control", data_val = "false" })
+        </div>
+    }
+    else
+    {
+        <div class="form-group">
+            @Html.HiddenFor(m => m.AppointManagerMessage.ManagerId)
+        </div>
+    }
+
+    @if (User.Claims.First(claim => claim.Type == ClaimTypes.Role).Value == "Manager" && User.Claims.First(claim => claim.Type == "id").Value != Model.AppointManagerMessage.ManagerId)
+    {
+        <button type="submit" class="btn btn-primary disabled">Submit</button>
+    }
+    else
+    {
+        <button type="submit" class="btn btn-primary">Submit</button>
+    }
+    <a asp-controller="Profile" asp-action="Passport" asp-route-userId="@Model.EditApplicationStatusMessage.UserId">Passport</a>
+    <a asp-controller="Profile" asp-action="EducationDocument" asp-route-userId="@Model.EditApplicationStatusMessage.UserId">Education document</a>
+    <a asp-controller="Application" asp-action="Programs" asp-route-userId="@Model.EditApplicationStatusMessage.UserId">Chosen programs</a>
+
+    <span class="error-message text-danger"></span>
+    <span class="text-success"></span>
+}
+</div>
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script>
+    $(function () {
+        $('form').submit(function (e) {
+            e.preventDefault();
+
+            $.ajax({
+                url: '@Url.Action("Edit", "Application")',
+                type: 'POST',
+                data: $(this).serialize(),
+                success: function (response) {
+                    if (response.success) {
+                        $('.text-success').text('Ok');
+                    } else {
+                        $('.error-message').text(response.errorMessage);
+                    }
+                }
+            });
+        });
+    });
+</script>

@@ -1,0 +1,83 @@
+﻿@using Common.Models
+@using Common.Messages
+@using MVCAdmin.Interfaces
+@model EditProgramsMessage
+@using System.Security.Claims
+@inject IPersonellRequestService personellRequestService
+@inject IApplicationRequestService applicationRequestService
+@{
+    var isAbleToManage = false;
+
+    var application = await applicationRequestService.GetApplication(new GetApplicationRequest
+            {
+                UserId = Model.UserId
+            });
+    if (application.Success)
+    {
+        if (application.Load.ManagerId.ToString() == User.Claims.First(claim => claim.Type == "id").Value)
+        {
+            isAbleToManage = true;
+        }
+    }
+}
+<div class="d-flex flex-column">
+@using (Html.BeginForm("EditPrograms", "Application", FormMethod.Post, new { id = "profileForm" }))
+{
+    @Html.HiddenFor(m => m.UserId)
+    @for (int i = 0; i < Model.Programs.Count; i++)
+    {
+        <div class="form-group">
+            @Html.HiddenFor(m => m.Programs[i].Program)
+            <div>@ViewBag.ProgramNames[i]</div>
+            @Html.TextBoxFor(m => m.Programs[i].Priority, new { @class = "form-control" })
+            @Html.ValidationMessageFor(m => m.Programs[i].Priority, "", new { @class = "text-danger" })
+            </div>
+            @if (User.Claims.First(claim => claim.Type == ClaimTypes.Role).Value == "Manager" && !isAbleToManage)
+            {
+                
+            }
+            else
+            {
+                <a asp-controller="Application" asp-action="DeleteProgram" asp-route-userId="@Model.UserId" asp-route-programId="@Model.Programs[i].Program">Delete</a>
+            }
+    }
+
+    @if (User.Claims.First(claim => claim.Type == ClaimTypes.Role).Value == "Manager" && !isAbleToManage)
+    {
+        <button type="submit" class="btn btn-primary disabled">Submit</button>
+    }
+    else
+    {
+        <button type="submit" class="btn btn-primary">Submit</button>
+    }
+    <span class="error-message text-danger"></span>
+    <span class="text-success"></span>
+}
+</div>
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script>
+    $(function () {
+        $('form').submit(function (e) {
+            e.preventDefault();
+
+            $.ajax({
+                url: '@Url.Action("EditPrograms", "Application")',
+                type: 'POST',
+                data: $(this).serialize(),
+                success: function (response) {
+                    if (response.success) {
+                        $('.text-success').text('Ok');
+                    } else {
+                        $('.error-message').text(response.errorMessage);
+                    }
+                }
+            });
+        });
+    });
+</script>

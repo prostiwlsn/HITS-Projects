@@ -1,0 +1,49 @@
+﻿@using Common.Models
+@using Common.Messages
+@using MVCAdmin.Interfaces
+@using System.Security.Claims
+@inject IPersonellRequestService personellRequestService
+@inject IApplicationRequestService applicationRequestService
+@model UploadFileMessage
+@{
+    var isAbleToManage = false;
+
+    var application = await applicationRequestService.GetApplication(new GetApplicationRequest
+            {
+                UserId = Model.UserId
+            });
+    if (application.Success)
+    {
+        if (application.Load.ManagerId.ToString() == User.Claims.First(claim => claim.Type == "id").Value)
+        {
+            isAbleToManage = true;
+        }
+    }
+}
+@using (Html.BeginForm(Model.IsPassportFile ? "UploadPassportFile" : "UploadEducationDocumentFile", "Profile", FormMethod.Post, new { id = "uploadForm", enctype = "multipart/form-data" }))
+{
+
+    <div class="form-group">
+        @Html.HiddenFor(m => m.UserId)
+        @Html.HiddenFor(m => m.IsPassportFile)
+        @Html.LabelFor(m => m.FileModel.File)
+        @Html.TextBoxFor(m => m.FileModel.File, new { type = "file", @class = "form-control" })
+    </div>
+
+    @if (User.Claims.First(claim => claim.Type == ClaimTypes.Role).Value == "Manager" && !isAbleToManage)
+    {
+        <button type="submit" class="btn btn-primary disabled">Submit</button>
+    }
+    else
+    {
+        <button type="submit" class="btn btn-primary">Submit</button>
+    }
+    <span class="error-message text-danger"></span>
+    <span class="text-success"></span>
+}
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

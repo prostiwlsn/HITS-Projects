@@ -1,0 +1,110 @@
+﻿@using MVCAdmin.Models
+@using Common.Models
+@using Common.Messages
+@model EditPersonellModel
+
+@using MVCAdmin.Interfaces
+@inject IDictionaryRequestService requestService
+@{
+    List<FacultyInfoModel> list = await requestService.GetFaculties();
+    List<SelectListItem> facultySelectList = list.Select(f => new SelectListItem
+            {
+                Value = f.Id.ToString(),
+                Text = f.Name
+            }).ToList();
+
+    var role = Model.AssignRoleMessage.Role;
+}
+<div class="d-flex flex-column">
+@using (Html.BeginForm("Edit", "Personell", FormMethod.Post, new { id = "personellForm" }))
+{
+    <div class="form-group">
+        @Html.HiddenFor(m => m.AppointToFacultyMessage.ManagerId)
+        @Html.HiddenFor(m => m.ProfileEditMessage.UserId)
+        @Html.HiddenFor(m => m.AssignRoleMessage.Email)
+        @Html.LabelFor(m => m.ProfileEditMessage.ProfileEditModel.Name)
+        @Html.TextBoxFor(m => m.ProfileEditMessage.ProfileEditModel.Name, new { @class = "form-control" })
+        @Html.ValidationMessageFor(m => m.ProfileEditMessage.ProfileEditModel.Name, "", new { @class = "text-danger" })
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(m => m.ProfileEditMessage.ProfileEditModel.Surname)
+        @Html.TextBoxFor(m => m.ProfileEditMessage.ProfileEditModel.Surname, new { @class = "form-control" })
+        @Html.ValidationMessageFor(m => m.ProfileEditMessage.ProfileEditModel.Surname, "", new { @class = "text-danger" })
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(m => m.ProfileEditMessage.ProfileEditModel.SecondName)
+        @Html.TextBoxFor(m => m.ProfileEditMessage.ProfileEditModel.SecondName, new { @class = "form-control" })
+        @Html.ValidationMessageFor(m => m.ProfileEditMessage.ProfileEditModel.SecondName, "", new { @class = "text-danger" })
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(m => m.ProfileEditMessage.ProfileEditModel.PhoneNumber)
+        @Html.TextBoxFor(m => m.ProfileEditMessage.ProfileEditModel.PhoneNumber, new { @class = "form-control" })
+        @Html.ValidationMessageFor(m => m.ProfileEditMessage.ProfileEditModel.PhoneNumber, "", new { @class = "text-danger" })
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(m => m.ProfileEditMessage.ProfileEditModel.Gender)
+        @Html.DropDownListFor(m => m.ProfileEditMessage.ProfileEditModel.Gender, new SelectList(Enum.GetValues(typeof(Gender))), "Select Gender", new { @class = "form-control" })
+        @Html.ValidationMessageFor(m => m.ProfileEditMessage.ProfileEditModel.Gender, "", new { @class = "text-danger" })
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(m => m.ProfileEditMessage.ProfileEditModel.Citizenship)
+        @Html.TextBoxFor(m => m.ProfileEditMessage.ProfileEditModel.Citizenship, new { @class = "form-control" })
+        @Html.ValidationMessageFor(m => m.ProfileEditMessage.ProfileEditModel.Citizenship, "", new { @class = "text-danger" })
+    </div>
+    @if (role == Roles.Manager)
+    {
+        <div class="form-group">
+            @Html.LabelFor(m => m.AppointToFacultyMessage.FacultyId, "Faculty")
+            @Html.DropDownListFor(m => m.AppointToFacultyMessage.FacultyId, facultySelectList, "Select a faculty", new { @class = "form-control" })
+        </div>
+    }
+    else
+    {
+        @Html.HiddenFor(m => m.AppointToFacultyMessage.FacultyId)
+    }
+    <div class="form-group">
+        @Html.LabelFor(m => m.AssignRoleMessage.Role)
+        @Html.DropDownListFor(m => m.AssignRoleMessage.Role, new SelectList(Enum.GetValues(typeof(Roles))), "Select Role", new { @class = "form-control" })
+        @Html.ValidationMessageFor(m => m.AssignRoleMessage.Role, "", new { @class = "text-danger" })
+    </div>
+
+    <button type="submit" class="btn btn-primary">Submit</button>
+}
+
+    <a class="btn btn-danger" asp-controller="Personell" asp-action="Delete" asp-route-email="@Model.AssignRoleMessage.Email">Delete</a>
+
+    <span class="error-message text-danger"></span>
+    <span class="text-success"></span>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script>
+    $(function () {
+        $('form').submit(function (e) {
+            e.preventDefault();
+
+            $.ajax({
+                url: '@Url.Action("Edit", "Personell")',
+                type: 'POST',
+                data: $(this).serialize(),
+                success: function (response) {
+                    if (response.success) {
+                        $('.text-success').text('Ok');
+                    } else {
+                        $('.error-message').text(response.errorMessage);
+                    }
+                }
+            });
+        });
+    });
+</script>

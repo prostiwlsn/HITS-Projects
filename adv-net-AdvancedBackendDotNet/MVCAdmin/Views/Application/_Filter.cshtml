@@ -1,0 +1,56 @@
+﻿@using Common.Messages
+@using Common.Models
+@using MVCAdmin.Interfaces
+@model GetApplicationsRequest
+@inject IPersonellRequestService personellRequestService
+@inject IDictionaryRequestService requestService
+@{
+    var managersRequest = await personellRequestService.GetPersonell(new GetPersonellRequest());
+    var managers = managersRequest.Load.Where(m => m.Role == Roles.Manager).ToList();
+    List<SelectListItem> managerSelectList = managers.Select(f => new SelectListItem
+            {
+                Value = f.Id.ToString(),
+                Text = f.Name + " " + f.Surname + " " + f.SecondName
+            }).ToList();
+    managerSelectList.Add(new SelectListItem { Value = "none", Text = "None"});
+
+    List<FacultyInfoModel> list = await requestService.GetFaculties();
+    List<SelectListItem> facultySelectList = list.Select(f => new SelectListItem
+            {
+                Value = f.Id.ToString(),
+                Text = f.Name
+            }).ToList();
+}
+
+@using (Html.BeginForm("Index", "Application", FormMethod.Get))
+{
+    <div class="form-group">
+        <label for="name">Name:</label>
+        @Html.TextBoxFor(m => m.name, new { @class = "form-control", placeholder = "Enter name" })
+    </div>
+    <div class="form-group">
+        <label for="faculties">Faculties:</label>
+        @Html.ListBoxFor(m => m.faculties, facultySelectList, new { @class = "form-control" })
+    </div>
+    <div class="form-group">
+        <label for="status">Status:</label>
+        @Html.DropDownListFor(m => m.status, new SelectList(Enum.GetValues(typeof(ApplicationStatus))), "Select status", new { @class = "form-control" })
+    </div>
+    <div class="form-group">
+        <label for="managerId">Manager:</label>
+        @Html.DropDownListFor(m => m.managerId, managerSelectList, "Select a manager", new { @class = "form-control" })
+    </div>
+    <div class="form-group">
+        <label for="isDescending">Sort Descending:</label>
+        @Html.CheckBoxFor(m => m.isDescending)
+    </div>
+    <div class="form-group">
+        <label for="size">Page Size:</label>
+        @Html.TextBoxFor(m => m.size, new { @class = "form-control", min = 1 })
+    </div>
+    <div class="form-group">
+        <label for="page">Page Number:</label>
+        @Html.TextBoxFor(m => m.page, new { @class = "form-control", min = 1 })
+    </div>
+    <button type="submit" class="btn btn-primary">Filter</button>
+}

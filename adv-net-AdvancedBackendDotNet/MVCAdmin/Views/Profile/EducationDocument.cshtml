@@ -1,0 +1,113 @@
+﻿@using Common.Models
+@using Common.Messages
+@using MVCAdmin.Interfaces
+@using System.Security.Claims
+
+@inject IDictionaryRequestService dictionaryRequestService
+@inject IProfileRequestService profileRequestService
+@inject IPersonellRequestService personellRequestService
+@inject IApplicationRequestService applicationRequestService
+@model EditEducationalDocumentMessage
+@{
+    var response = await dictionaryRequestService.GetDocumentTypes();
+    var list = response;
+
+    List<SelectListItem> selectList = list.Select(f => new SelectListItem
+            {
+                Value = f.Id.ToString(),
+                Text = f.Name
+            }).ToList();
+
+    GetFilesRequest request = new GetFilesRequest { IsPassport = false, UserId = Model.UserId };
+    var filesResponse = await profileRequestService.GetFiles(request);
+
+    var files = new List<Guid>();
+
+    if (filesResponse.Success)
+    {
+        files = filesResponse.Load.Files;
+    }
+
+    var isAbleToManage = false;
+
+    var application = await applicationRequestService.GetApplication(new GetApplicationRequest
+            {
+                UserId = Model.UserId
+            });
+    if (application.Success)
+    {
+        if (application.Load.ManagerId.ToString() == User.Claims.First(claim => claim.Type == "id").Value)
+        {
+            isAbleToManage = true;
+        }
+    }
+}
+
+<div class="d-flex flex-column">
+    @using (Html.BeginForm("EducationDocument", "Profile", FormMethod.Post, new { id = "docForm" }))
+    {
+        <div class="form-group">
+            @Html.HiddenFor(m => m.UserId)
+            @Html.DropDownListFor(m => m.EducationDocumentEditModel.Id, selectList, "Select a document type", new { @class = "form-control" })
+            @Html.ValidationMessageFor(m => m.EducationDocumentEditModel.Id, "", new { @class = "text-danger" })
+        </div>
+
+        @if (User.Claims.First(claim => claim.Type == ClaimTypes.Role).Value == "Manager" && !isAbleToManage)
+        {
+            <button type="submit" class="btn btn-primary disabled">Submit</button>
+        }
+        else
+        {
+            <button type="submit" class="btn btn-primary">Submit</button>
+        }
+        <span class="error-message text-danger"></span>
+        <span class="text-success"></span>
+    }
+
+    <div class="d-flex flex-column mb-3 mt-3">
+        @for (int i = 0; i < files.Count; i++)
+        {
+            <div class="d-flex flex-row">
+                <a asp-controller="Profile" asp-action="DownloadFile" asp-route-fileId="@files[i]">File @(i + 1)</a>
+                @if (User.Claims.First(claim => claim.Type == ClaimTypes.Role).Value == "Manager" && !isAbleToManage)
+                {
+
+                }
+                else
+                {
+                    <a asp-controller="Profile" asp-action="DeleteFile" asp-route-fileId="@files[i]" class="ml-2">Delete</a>
+                }
+            </div>
+        }
+
+    </div>
+    @Html.Partial("_Upload", new UploadFileMessage { IsPassportFile = false, UserId = Model.UserId })
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script>
+    $(function () {
+        $('#docForm').submit(function (e) {
+            e.preventDefault();
+
+            $.ajax({
+                url: '@Url.Action("EducationDocument", "Profile")',
+                type: 'POST',
+                data: $(this).serialize(),
+                success: function (response) {
+                    if (response.success) {
+                        $('.text-success').text('Ok');
+                    } else {
+                        $('.error-message').text(response.errorMessage);
+                    }
+                }
+            });
+        });
+    });
+</script>

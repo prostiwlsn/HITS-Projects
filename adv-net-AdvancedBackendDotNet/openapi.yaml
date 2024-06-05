@@ -1,0 +1,950 @@
+openapi: 3.0.3
+info:
+  title: Swagger Enrollee - OpenAPI 3.0
+  description: |-
+    Система "Абитуриент" для продвинутого курса по .NET
+    Сваггер не дает забиндить несколько описаний одного кода ошибки :/
+  version: 0.0.0.0.0.0.0.0.0.0.0.0.1
+externalDocs:
+  description: Диаграммы
+  url: https://app.diagrams.net/#G1fanZSbYrx8Dr3Ne5rvrd0L_lBE5L9giu
+tags:
+  - name: user
+    description: Доступ к авторизации и аутентификации
+  - name: profile
+    description: Доступ к просмотру и редактированию личной информации
+  - name: application
+    description: Доступ к системе подачи заявок
+  - name: dictionary
+    description: Доступ к справочнику
+paths:
+  /login:
+    post:
+      tags:
+        - user
+      summary: Войти в систему
+      description: Войти в систему
+      operationId: login
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/loginModel'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/tokenResponseModel'          
+        '400':
+          description: Invalid data
+        '404':
+          description: User not found
+      security:
+        - enrollee_auth:
+            - allScope
+  /register:
+    post:
+      tags:
+        - user
+      summary: Зарегистрироваться в системе
+      description: Зарегистрироваться в системе
+      operationId: register
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/registrationModel'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/tokenResponseModel'          
+        '400':
+          description: Invalid data
+      security:
+        - enrollee_auth:
+            - allScope
+  /logout:
+    post:
+      tags:
+        - user
+      summary: Выйти из системы
+      description: Выйти из системы
+      operationId: logout
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/messageResponseModel'          
+        '401':
+          description: User not logged in
+      security:
+        - enrollee_auth:
+            - allScope
+  /credentials/email:
+    put:
+      tags:
+        - user
+      summary: Сменить email
+      description: Сменить email
+      operationId: editEmail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/emailChangingModel'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/messageResponseModel'          
+        '400':
+          description: Invalid data
+        '401':
+          description: User not logged in
+      security:
+        - enrollee_auth:
+            - allScope
+  /credentials/password:
+    put:
+      tags:
+        - user
+      summary: Сменить пароль
+      description: Сменить пароль
+      operationId: editPassword
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/passwordChangingModel'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/messageResponseModel'          
+        '400':
+          description: Invalid data
+        '401':
+          description: User not logged in
+      security:
+        - enrollee_auth:
+            - allScope
+    post:
+      tags:
+        - user
+      summary: Сменить пароль
+      description: Сменить пароль
+      operationId: editPasswordPost
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/messageResponseModel'          
+        '400':
+          description: Invalid data
+        '401':
+          description: User not logged in
+      security:
+        - enrollee_auth:
+            - allScope
+  /profile:
+    get:
+      tags:
+        - profile
+      summary: Получить информацию о профиле
+      description: Получить информацию о профиле
+      operationId: getProfile
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/profileResponseModel'          
+        '400':
+          description: Invalid data
+        '401':
+          description: User not logged in
+        '404':
+          description: User not found
+      security:
+        - enrollee_auth:
+            - allScope
+    put:
+      tags:
+        - profile
+      summary: Редактировать информацию о профиле
+      description: Редактировать информацию о профиле
+      operationId: editProfile
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/profileResponseModel'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/messageResponseModel'          
+        '400':
+          description: Invalid data
+        '401':
+          description: User not logged in
+      security:
+        - enrollee_auth:
+            - allScope
+  /profile/document/{documentName}/scan:
+    parameters:
+      - name: documentName
+        in: path
+        required: true
+        schema:
+          type: string
+          enum:
+              - passport
+              - educationDocument
+              - other
+    post:
+      tags:
+        - profile
+      summary: Загрузить скан документа
+      description: Загрузить документ
+      operationId: uploadDocument
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                 type: string
+                 format: binary
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/messageResponseModel'          
+        '400':
+          description: Invalid data
+        '401':
+          description: User not logged in
+      security:
+        - enrollee_auth:
+            - allScope
+    get:
+      tags:
+        - profile
+      summary: Получить документ скан документа
+      description: Получить документ
+      operationId: getDocument
+      parameters:
+        - name: files
+          in: query
+          required: false
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            multipart/form-data:
+              schema:
+                type: object
+                properties:
+                  file:
+                   type: string
+                   format: binary        
+        '400':
+          description: Invalid data
+        '401':
+          description: User not logged in
+        '404':
+          description: File not found
+      security:
+        - enrollee_auth:
+            - allScope
+    delete:
+      tags:
+        - profile
+      summary: Удалить скан документа
+      description: Удалить документ
+      operationId: deleteDocument
+      parameters:
+        - name: files
+          in: query
+          required: true
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/messageResponseModel'          
+        '400':
+          description: Invalid data
+        '401':
+          description: User not logged in
+        '404':
+          description: File not found
+      security:
+        - enrollee_auth:
+            - allScope
+  /profile/document/passport:
+    get:
+      tags:
+        - profile
+      summary: Получить информацию о паспорте
+      description: Получить документ
+      operationId: getDocumentInfo
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/passportResponseModel'       
+        '400':
+          description: Invalid data
+        '401':
+          description: User not logged in
+      security:
+        - enrollee_auth:
+            - allScope
+    put:
+      tags:
+        - profile
+      summary: Редактировать информацию о паспорте
+      description: Редактировать документ
+      operationId: editDocumentInfo
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/passportResponseModel'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/messageResponseModel'      
+        '400':
+          description: Invalid data
+        '401':
+          description: User not logged in
+      security:
+        - enrollee_auth:
+            - allScope
+  /profile/document/educationDocument:
+    get:
+      tags:
+        - profile
+      summary: Получить информацию документа об образовании
+      description: Получить документ
+      operationId: getEducationDocumentInfo
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/educationDocumentResponseModel'         
+        '400':
+          description: Invalid data
+        '401':
+          description: User not logged in
+      security:
+        - enrollee_auth:
+            - allScope
+    put:
+      tags:
+        - profile
+      summary: Редактировать информацию документа об образовании
+      description: Редактировать документ
+      operationId: editEducationDocumentInfo
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/educationDocumentEditModel'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/messageResponseModel'           
+        '400':
+          description: Invalid data
+        '401':
+          description: User not logged in
+      security:
+        - enrollee_auth:
+            - allScope
+  /dictionary/programs:
+    get:
+      tags:
+        - dictionary
+      summary: Получить список программ
+      description: Получить список программ
+      operationId: getPrograms
+      parameters:
+        - name: name
+          in: query
+          required: false
+          explode: true
+          schema:
+            type: string
+        - name: facultyId
+          in: query
+          required: false
+          explode: true
+          schema:
+            type: string
+        - name: educationFormId
+          in: query
+          required: false
+          explode: true
+          schema:
+            type: number
+        - name: language
+          in: query
+          required: false
+          explode: true
+          schema:
+            type: string
+        - name: code
+          in: query
+          required: false
+          explode: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/programsPaginatedResponseModel'          
+        '400':
+          description: Invalid data
+      security:
+        - enrollee_auth:
+            - allScope
+  /dictionary/faculties:
+    get:
+      tags:
+        - dictionary
+      summary: Получить список факультетов
+      description: Получить список факультетов
+      operationId: getFaculties
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/facultiesResponseModel'          
+        '400':
+          description: Invalid data
+      security:
+        - enrollee_auth:
+            - allScope
+  /dictionary/documentTypes:
+    get:
+      tags:
+        - dictionary
+      summary: Получить список типов документа об образовании
+      description: Получить список типов документа об образовании
+      operationId: getDocumentTypes
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/educationDocumentTypeResponseModel'          
+        '400':
+          description: Invalid data
+      security:
+        - enrollee_auth:
+            - allScop
+  /dictionary/educationLevels:
+    get:
+      tags:
+        - dictionary
+      summary: Получить список уровней образования
+      description: Получить список уровней образования
+      operationId: getEducationLevels
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/educationLevelsResponseModel'          
+        '400':
+          description: Invalid data
+      security:
+        - enrollee_auth:
+            - allScope
+  /profile/application/programs:
+    get:
+      tags:
+        - application
+      summary: Получить список своих выбранных направлений
+      description: Получить список своих выбранных направлений
+      operationId: getApplications
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/applicationResponseModel'          
+        '400':
+          description: Invalid data
+      security:
+        - enrollee_auth:
+            - allScope
+    put:
+      tags:
+        - application
+      summary: Изменить приоритет в своих выбранных направлениях
+      description: Изменить приоритет в своих выбранных направлениях
+      operationId: editApplications
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/applicationsEditModel'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/messageResponseModel'          
+        '400':
+          description: Invalid data
+        '401':
+          description: User not logged in
+        '404':
+          description: Programs not found
+      security:
+        - enrollee_auth:
+            - allScope
+  /profile/application/program:
+    post:
+      tags:
+        - application
+      summary: Выбрать направление
+      description: Выбрать направление
+      operationId: createApplication
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/applicationCreateModel'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/messageResponseModel'          
+        '400':
+          description: Invalid data
+        '401':
+          description: User not logged in
+      security:
+        - enrollee_auth:
+            - allScope
+    put:
+      tags:
+        - application
+      summary: Изменить приоритет направления
+      description: Изменить приоритет направления
+      operationId: editApplication
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/applicationEditModel'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/messageResponseModel'          
+        '400':
+          description: Invalid data
+        '401':
+          description: User not logged in
+        '404':
+          description: Program not found
+      security:
+        - enrollee_auth:
+            - allScope
+    delete:
+      tags:
+        - application
+      summary: Удалить направление из списка выбранных
+      description: Удалить направление из списка выбранных
+      operationId: deleteApplication
+      parameters:
+        - name: id
+          in: query
+          required: true
+          explode: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/messageResponseModel'          
+        '400':
+          description: Invalid data
+        '401':
+          description: User not logged in
+        '404':
+          description: Program not found
+      security:
+        - enrollee_auth:
+            - allScope
+  /refresh:
+    post:
+      tags:
+        - user
+      summary: Войти в систему
+      description: Войти в систему
+      operationId: refresh
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/tokenResponseModel'          
+        '400':
+          description: Invalid data
+        '404':
+          description: User not found
+      security:
+        - enrollee_auth:
+            - allScope
+components:
+  securitySchemes:
+    enrollee_auth:
+      type: oauth2
+      flows:
+        implicit:
+          authorizationUrl: https://petstore3.swagger.io/oauth/authorize
+          scopes:
+            allScope: xdd
+    api_key:
+      type: apiKey
+      name: api_key
+      in: header
+  schemas:
+    loginModel:
+      required:
+        - email
+        - password
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          example: example@email.com
+        password:
+          type: string
+    registrationModel:
+      required:
+        - email
+        - password
+        - passwordConfirmation
+        - name
+        - surname
+        - gender
+        - birthDate
+        - citizenship
+        - phoneNumber
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          example: example@email.com
+        password:
+          type: string
+        passwordConfirmation:
+          type: string
+        name:
+          type: string
+        surname:
+          type: string
+        secondName:
+          type: string
+        gender:
+          type: string
+          enum:
+            - male
+            - female
+        birthDate:
+          type: string
+          format: date
+        citizenship:
+          type: string
+        phoneNumber:
+          type: string
+    emailChangingModel:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          example: example@email.com
+    passwordChangingModel:
+      type: object
+      properties:
+        password:
+          type: string
+    tokenResponseModel:
+      type: object
+      properties:
+        token:
+          type: string
+    messageResponseModel:
+      type: object
+      properties:
+        message:
+          type: string
+    profileResponseModel:
+      required:
+        - name
+        - surname
+        - gender
+        - birthDate
+        - citizenship
+        - phoneNumber
+      type: object
+      properties:
+        name:
+          type: string
+        surname:
+          type: string
+        secondName:
+          type: string
+        gender:
+          type: string
+          enum:
+            - male
+            - female
+        birthDate:
+          type: string
+          format: date
+        citizenship:
+          type: string
+        phoneNumber:
+          type: string
+    passportResponseModel:
+      required:
+        - seriesNumber
+        - birthPlace
+        - givenDate
+        - givenPlace
+      type: object
+      properties:
+        seriesNumber:
+          type: number
+        birthPlace:
+          type: string
+        givenDate:
+          type: string
+          format: date
+        givenPlace:
+          type: string
+        files:
+          type: array
+          items:
+            type: string
+    educationDocumentResponseModel:
+      type: object
+      properties:
+        name:
+          type: string
+        type:
+          $ref: '#/components/schemas/educationDocumentType'
+        files:
+          type: array
+          items:
+            type: string
+    educationDocumentEditModel:
+      required:
+        - name
+        - typeId
+      type: object
+      properties:
+        name:
+          type: string
+        typeId:
+          type: number
+    faculty:
+      type: object
+      properties:
+        name:
+          type: string
+        id:
+          type: string
+        createTime:
+          type: string
+    educationLevel:
+      type: object
+      properties:
+        id: 
+          type: number
+        name:
+          type: string
+    program:
+      type: object
+      properties:
+        name:
+          type: string
+        code:
+          type: string
+        language:
+          type: string
+        id:
+          type: string
+        educationForm:
+          type: string
+        createTime:
+          type: string
+          format: date
+        faculty:
+          $ref: '#/components/schemas/faculty'
+        educationLevel:
+          $ref: '#/components/schemas/educationLevel'
+    educationDocumentType:
+      type: object
+      properties:
+        name:
+          type: string
+        id:
+          type: string
+          format: uuid
+        createTime:
+          type: string
+          format: date-time
+        educationLevel:
+          $ref: '#/components/schemas/educationLevel'
+        nextEducationLevels:
+          $ref: '#/components/schemas/educationLevelsResponseModel'
+    applicationResponseModel:
+      type: object
+      properties:
+        program:
+          $ref: '#/components/schemas/program'
+        priority:
+          type: number
+        status:
+          type: string
+          default: created
+          enum:
+            - created
+            - pending
+            - accepted
+            - denied
+            - closed 
+        createTime:
+          type: string
+          format: date-time
+        id:
+          type: string
+    applicationCreateModel:
+      type: object
+      properties:
+        programId:
+          type: string
+        priority:
+          type: number
+    applicationEditModel:
+      type: object
+      properties:
+        applicationId:
+          type: string
+        priority:
+          type: number
+    applicationDeleteModel:
+      type: object
+      properties:
+        applicationId:
+          type: string
+    applicationsEditModel:
+      type: array
+      items:
+        $ref: '#/components/schemas/applicationEditModel'
+    facultiesResponseModel:
+      type: array
+      items:
+        $ref: '#/components/schemas/faculty'
+    programsResponseModel:
+      type: array
+      items:
+        $ref: '#/components/schemas/program'
+    educationLevelsResponseModel:
+      type: array
+      items:
+        $ref: '#/components/schemas/educationLevel'
+    pagination:
+      type: object
+      properties:
+        size:
+          type: number
+        pages:
+          type: number
+        current:
+          type: number
+    programsPaginatedResponseModel:
+      type: object
+      properties:
+        pagination:
+          $ref: '#/components/schemas/pagination'
+        programs:
+          $ref: '#/components/schemas/programsResponseModel'
+    educationDocumentTypeResponseModel:
+      type: array
+      items:
+        $ref: '#/components/schemas/educationDocumentType'

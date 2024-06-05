@@ -1,0 +1,37 @@
+﻿@page "{userId}"
+
+@using Common.Models
+@using Common.Messages
+@using MVCAdmin.Models
+@using Microsoft.AspNetCore.Mvc
+@model AppointToFacultyMessage
+
+@using MVCAdmin.Interfaces
+@inject IDictionaryRequestService requestService
+@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+    List<FacultyInfoModel> list = await requestService.GetFaculties();
+    List<SelectListItem> facultySelectList = list.Select(f => new SelectListItem
+            {
+                Value = f.Id.ToString(),
+                Text = f.Name
+            }).ToList();
+
+    //var route = ViewContext.RouteData.Values["userId"]?.ToString();
+    //Console.WriteLine(route);
+
+    //Model.ManagerId = Guid.Parse(route??Guid.Empty.ToString());
+}
+
+@using (Html.BeginForm("Appoint", "Personell", FormMethod.Post))
+{
+    <div class="form-group">
+        @Html.HiddenFor(m => m.ManagerId)
+        @Html.LabelFor(m => m.FacultyId, "Faculty")
+        @Html.DropDownListFor(m => m.FacultyId, facultySelectList, "Select a faculty", new { @class = "form-control" })
+    </div>
+
+    <button type="submit" class="btn btn-primary">Submit</button>
+}

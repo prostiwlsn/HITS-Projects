@@ -1,0 +1,47 @@
+﻿@using Common.Models
+@using Common.Messages
+@model List<ApplicationInfoModel>
+@{
+}
+
+<div class="d-flex flex-column">
+    <div class="d-flex flex-column">
+
+    </div>
+    @foreach (var item in Model)
+    {
+        <div class="d-flex flex-row mt-2">
+            <a class="ms-1" asp-controller="Application" asp-action="Edit" asp-route-userId="@item.UserId">@item.Name </a>
+            <div class="ms-1">@item.Surname  </div>
+            <div class="ms-1">@item.SecondName  </div>
+            <div class="ms-1">@item.Email </div>
+            @if (!item.IsClosed)
+            {
+                <div class="ms-1">@item.Status</div>
+            }
+            else
+            {
+                <div class="ms-1">Closed</div>
+            }
+            @if (item.ManagerId == null)
+            {
+                <div class="ms-1">No manager</div>
+            }
+            else
+            {
+                <div class="ms-1">@item.ManagerName</div>
+            }
+        </div>
+    }
+    @Html.Partial("_Filter", new GetApplicationsRequest
+{
+    size = 10,
+    page = 1,
+    name = string.Empty,
+    faculties = new List<string>(),
+    status = ApplicationStatus.Any,
+    isManagerAppointed = false,
+    managerId = Guid.Empty,
+    isDescending = false,
+})
+</div>

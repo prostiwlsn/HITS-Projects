@@ -1,0 +1,21 @@
+﻿@using Common.Models
+@model EmailChangeModel
+@{
+}
+
+@using (Html.BeginForm("ChangeEmail", "Home", FormMethod.Post))
+{
+    <div class="form-group">
+        @Html.LabelFor(m => m.NewEmail)
+        @Html.TextBoxFor(m => m.NewEmail, new { @class = "form-control" })
+        @Html.ValidationMessageFor(m => m.NewEmail, "", new { @class = "text-danger" })
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(m => m.Password)
+        @Html.PasswordFor(m => m.Password, new { @class = "form-control" })
+        @Html.ValidationMessageFor(m => m.Password, "", new { @class = "text-danger" })
+    </div>
+
+    <button type="submit" class="btn btn-primary">Submit</button>
+}
